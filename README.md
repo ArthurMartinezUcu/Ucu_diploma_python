@@ -1,3 +1,7 @@
+Integrantes Camila Maxi Arthur
+
+
+
 # Proyecto
 
 ## Análisis Interactivo de Datos con Streamlit
