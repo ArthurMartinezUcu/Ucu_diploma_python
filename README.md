@@ -21,7 +21,7 @@ Debes buscar preferentemente en sitios de 'Datos Abiertos' o en la plataformas d
 
 El proyecto se dividirá en dos fases:
 
-La primera fase realizada en el archivo `notebooks/practice.ipynb` consiste en:
+La primera fase realizada en el archivo `notebooks/notebook.ipynb` consiste en:
 - Carga y Preparación de Datos (Pandas en Jupyter Notebook).
 - Análisis Exploratorio de Datos (Pandas en Jupyter Notebook).
 - Grabación del dataframe resultante en un archivo CSV en la carpeta `/data/processed`.
@@ -34,7 +34,7 @@ La segunda fase realizada en el archivo `app.py` consiste en:
 
 ### Primera Fase
 
-En el archivo `notebooks/practice.ipynb`: 
+En el archivo `notebooks/notebook.ipynb`: 
 
 1. **Dataset**: Graba el dataset elegido a la carpeta `data/raw`.
 2. **Carga y Estructura:** Cargar el dataset alojado en el directorio `data/raw` y convertirlo en un DataFrame de Pandas.
@@ -79,7 +79,7 @@ Deberás preparar tu proyecto para el despliegue.
 
 2.  **Estructura de Carpeta:**
     * `app.py` (código de Streamlit).
-    * `notebooks/practice.ipynb` en este archivo puedes realizar un análisis previo del dataset propuesto
+    * `notebooks/notebook.ipynb` en este archivo puedes realizar un análisis previo del dataset propuesto
     * `requirements.txt` (listado de dependencias: `streamlit`, `pandas`, `scikit-learn`, `matplotlib` o `plotly`).
 
 3.  **Despliegue:** Desplegar la aplicación final utilizando **Streamlit Community Cloud** (share.streamlit.io).
