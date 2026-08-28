@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 df = pd.read_csv("data/processed/spotify_processed.csv")
 
-st.set_page_config(page_title="UCU Curso Pyton EDA Dataset de Spotify", page_icon="🎵",layout="wide")
+st.set_page_config(page_title="UCU Curso Python EDA Dataset de Spotify", page_icon="🎵",layout="wide")
 
 st.title("🎵 UCU Curso Pyton EDA Dataset de Spotify")
 st.title("Grupo G - Camila, Maxi, Arthur")
