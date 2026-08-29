@@ -1,1 +1,1 @@
-> Esta carpeta contiene los datasets correspondientes a los subconjuntos de entrenamiento y test obtenidos en el Punto 8 de _notebook.ipynb_
+Contiene el dataset obtenido tras la limpieza de datos en _notebook.ipynb_.
