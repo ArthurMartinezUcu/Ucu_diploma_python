@@ -1,1 +1,1 @@
-> This folder contains processed data.
+> Esta carpeta contiene los datasets correspondientes a los subconjuntos de entrenamiento y test obtenidos en el Punto 8 de _notebook.ipynb_
