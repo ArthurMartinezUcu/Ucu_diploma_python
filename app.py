@@ -75,9 +75,10 @@ def crear_resumen(datos):
     return resumen.round(3)
 
 
-def restablecer_filtros():
+def restablecer_filtros(version):
     for clave in ["rango_popularidad", "rango_duracion", "rango_energia", "filtro_explicito"]:
-        st.session_state.pop(clave, None)
+        st.session_state.pop(f"{clave}_{version}", None)
+    st.session_state["version_filtros"] = version + 1
 
 
 st.set_page_config(
@@ -103,6 +104,7 @@ rango_energia_inicial = (
     float(datos["energy"].min()),
     float(datos["energy"].max()),
 )
+version_filtros = st.session_state.get("version_filtros", 0)
 
 with st.sidebar:
     st.header("Filtros")
@@ -112,7 +114,7 @@ with st.sidebar:
         rango_popularidad_inicial[0],
         rango_popularidad_inicial[1],
         rango_popularidad_inicial,
-        key="rango_popularidad",
+        key=f"rango_popularidad_{version_filtros}",
     )
     rango_duracion = st.slider(
         "Duración (minutos)",
@@ -120,7 +122,7 @@ with st.sidebar:
         duracion_minutos[1],
         duracion_minutos,
         step=0.1,
-        key="rango_duracion",
+        key=f"rango_duracion_{version_filtros}",
     )
     rango_energia = st.slider(
         "Energía",
@@ -128,15 +130,15 @@ with st.sidebar:
         rango_energia_inicial[1],
         rango_energia_inicial,
         step=0.01,
-        key="rango_energia",
+        key=f"rango_energia_{version_filtros}",
     )
     filtro_explicito = st.radio(
         "Contenido explícito",
         ["Todas", "No explícita", "Explícita"],
-        key="filtro_explicito",
+        key=f"filtro_explicito_{version_filtros}",
     )
     if st.button("Restablecer filtros", width="stretch"):
-        restablecer_filtros()
+        restablecer_filtros(version_filtros)
         st.rerun()
 
     st.divider()
