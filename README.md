@@ -12,7 +12,7 @@ Se cuenta con un dataset proveniente de Kaggle que se obtuvo utilizando la API d
 
 ## Pregunta de análisis
 
-### ¿Es posible estimar la popularidad de una canción a partir de sus atributos de audio?
+### ¿Qué atributos de una canción están relacionados con la popularidad?
 
 `popularity` es la variable objetivo y se expresa en una escala de 0 a 100.
 El notebook estudia su relación con duración, bailabilidad, energía, volumen, contenido hablado, acústica, instrumentalidad, probabilidad de grabación en vivo, valencia musical y tempo.
@@ -52,7 +52,7 @@ El flujo implementado en `notebooks/notebook.ipynb` realiza:
 9. Estandarización de variables continuas y one-hot encoding de `time_signature`.
 10. Selección de las diez características principales mediante `f_regression`.
 
-El ranking de características no constituye un modelo final. Para responder formalmente la pregunta predictiva todavía sería necesario comparar modelos mediante MAE, RMSE y R² con validación cruzada.
+El ranking de características se utiliza como una herramienta exploratoria para comparar la relación de cada variable con `popularity`. Estas asociaciones no implican causalidad ni permiten evaluar por sí solas la capacidad predictiva de un modelo.
 
 ## Aplicación Streamlit
 
@@ -79,9 +79,6 @@ Ucu_diploma_python/
 │   └── processed/
 │       ├── README.md
 │       └── spotify_processed.csv
-├── models/
-│   ├── spotify-scaler.pkl
-│   └── spotify-time-signature-encoder.pkl
 └── notebooks/
     ├── import_dataset.ipynb
     └── notebook.ipynb

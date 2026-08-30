@@ -110,7 +110,7 @@ with st.sidebar:
     st.divider()
     st.link_button("Repositorio en GitHub", URL_REPOSITORIO, width="stretch")
     st.link_button("Dataset original", URL_DATASET, width="stretch")
-    st.caption("Proyecto UCU · Camila, Maximiliano y Arthur")
+    st.caption("Proyecto UCU · Maximiliano Friss y Arthur Martinez")
 
 condicion = (
     datos["popularity"].between(*rango_popularidad)
@@ -120,10 +120,10 @@ condicion = (
 )
 datos_filtrados = datos.loc[condicion].copy()
 
-st.title("🎧 ¿Es posible predecir la popularidad de una canción a partir de sus atributos?")
+st.title("🎧 ¿Qué atributos están relacionados con la popularidad?")
 st.write(
     "Análisis exploratorio para observar qué atributos se relacionan con la popularidad. "
-    "La aplicación no realiza una predicción, sino que muestra asociaciones y tendencias presentes en el dataset."
+    "La aplicación no realiza una predicción, sino que muestra asociaciones y tendencias."
 )
 st.caption(f"Dataset completo: {len(datos):,} canciones".replace(",", "."))
 
@@ -146,7 +146,7 @@ pestaña_panorama, pestaña_relaciones, pestaña_datos = st.tabs(
 )
 
 with pestaña_panorama:
-    st.subheader("Resumen general de la muestra")
+    st.subheader("Resumen general")
     columna_histograma, columna_correlacion = st.columns([1.35, 1])
 
     with columna_histograma:
@@ -175,7 +175,7 @@ with pestaña_panorama:
         )
 
         if correlaciones.empty:
-            st.info("Se necesita variación en popularidad para calcular correlaciones.")
+            st.info("No hay correlación.")
         else:
             tabla_correlaciones = correlaciones.rename_axis("variable").reset_index(name="correlación")
             tabla_correlaciones["variable"] = tabla_correlaciones["variable"].map(NOMBRES_VARIABLES)
@@ -195,7 +195,7 @@ with pestaña_panorama:
 
     if correlaciones.empty:
         variable_destacada = "No disponible"
-        valor_correlacion = "Ampliá el rango de popularidad para comparar."
+        valor_correlacion = "No hay correlaciones."
     else:
         variable_mayor_correlacion = correlaciones.abs().idxmax()
         variable_destacada = NOMBRES_VARIABLES[variable_mayor_correlacion]
@@ -258,10 +258,8 @@ with pestaña_relaciones:
 
 with pestaña_datos:
     st.subheader("Resumen descriptivo")
-    st.info(
-        "La popularidad cambia con el tiempo y también depende de información que no tenemos, "
-        "como promoción, playlists o seguidores del artista."
-    )
+    st.info("La popularidad cambia con el tiempo y también depende de información que no tenemos, "
+        "como promoción, playlists o seguidores del artista.")
     st.dataframe(crear_resumen(datos_filtrados), width="stretch")
 
     st.subheader("Explorar registros")
@@ -293,6 +291,6 @@ with pestaña_datos:
     if columnas_visibles:
         st.dataframe(datos_filtrados[columnas_visibles].head(500), width="stretch", hide_index=True)
     else:
-        st.info("Seleccioná al menos una columna para ver la tabla.")
+        st.info("Seleccione al menos una columna.")
 
 st.caption(f"[Dataset original]({URL_DATASET}) · [Código fuente]({URL_REPOSITORIO}) · Proyecto UCU")
