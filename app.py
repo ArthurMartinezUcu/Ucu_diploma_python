@@ -91,20 +91,28 @@ if not RUTA_DATOS.exists():
     st.stop()
 
 datos = cargar_datos(RUTA_DATOS)
+rango_popularidad_inicial = (
+    int(datos["popularity"].min()),
+    int(datos["popularity"].max()),
+)
+duracion_minutos = (
+    float(np.floor(datos["duration_min"].min() * 10) / 10),
+    float(np.ceil(datos["duration_min"].max() * 10) / 10),
+)
+rango_energia_inicial = (
+    float(datos["energy"].min()),
+    float(datos["energy"].max()),
+)
 
 with st.sidebar:
     st.header("Filtros")
 
     rango_popularidad = st.slider(
         "Popularidad",
-        int(datos["popularity"].min()),
-        int(datos["popularity"].max()),
-        (int(datos["popularity"].min()), int(datos["popularity"].max())),
+        rango_popularidad_inicial[0],
+        rango_popularidad_inicial[1],
+        rango_popularidad_inicial,
         key="rango_popularidad",
-    )
-    duracion_minutos = (
-        float(np.floor(datos["duration_min"].min() * 10) / 10),
-        float(np.ceil(datos["duration_min"].max() * 10) / 10),
     )
     rango_duracion = st.slider(
         "Duración (minutos)",
@@ -116,9 +124,9 @@ with st.sidebar:
     )
     rango_energia = st.slider(
         "Energía",
-        float(datos["energy"].min()),
-        float(datos["energy"].max()),
-        (float(datos["energy"].min()), float(datos["energy"].max())),
+        rango_energia_inicial[0],
+        rango_energia_inicial[1],
+        rango_energia_inicial,
         step=0.01,
         key="rango_energia",
     )
@@ -127,7 +135,9 @@ with st.sidebar:
         ["Todas", "No explícita", "Explícita"],
         key="filtro_explicito",
     )
-    st.button("Restablecer filtros", on_click=restablecer_filtros, width="stretch")
+    if st.button("Restablecer filtros", width="stretch"):
+        restablecer_filtros()
+        st.rerun()
 
     st.divider()
     st.link_button("Repositorio en GitHub", URL_REPOSITORIO, width="stretch")
