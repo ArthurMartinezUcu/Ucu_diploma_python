@@ -1,8 +1,9 @@
-numpy
-pandas
-matplotlib
-plotly
-scikit-learn
-streamlit
-kagglehub
-seaborn
+numpy==2.5.2
+pandas==3.0.5
+matplotlib==3.11.1
+plotly==6.9.0
+scikit-learn==1.9.0
+streamlit==1.62.0
+kagglehub==1.0.2
+seaborn==0.13.2
+ipykernel==7.3.0
