@@ -75,6 +75,11 @@ def crear_resumen(datos):
     return resumen.round(3)
 
 
+def restablecer_filtros():
+    for clave in ["rango_popularidad", "rango_duracion", "rango_energia", "filtro_explicito"]:
+        st.session_state.pop(clave, None)
+
+
 st.set_page_config(
     page_title="Proyecto UCU · Grupo G",
     page_icon="🎧",
@@ -95,6 +100,7 @@ with st.sidebar:
         int(datos["popularity"].min()),
         int(datos["popularity"].max()),
         (int(datos["popularity"].min()), int(datos["popularity"].max())),
+        key="rango_popularidad",
     )
     duracion_minutos = (
         float(np.floor(datos["duration_min"].min() * 10) / 10),
@@ -106,6 +112,7 @@ with st.sidebar:
         duracion_minutos[1],
         duracion_minutos,
         step=0.1,
+        key="rango_duracion",
     )
     rango_energia = st.slider(
         "Energía",
@@ -113,23 +120,28 @@ with st.sidebar:
         float(datos["energy"].max()),
         (float(datos["energy"].min()), float(datos["energy"].max())),
         step=0.01,
+        key="rango_energia",
     )
-    filtro_explicito = st.multiselect(
+    filtro_explicito = st.radio(
         "Contenido explícito",
-        ["No explícita", "Explícita"],
-        default=["No explícita", "Explícita"],
+        ["Todas", "No explícita", "Explícita"],
+        key="filtro_explicito",
     )
+    st.button("Restablecer filtros", on_click=restablecer_filtros, width="stretch")
 
     st.divider()
     st.link_button("Repositorio en GitHub", URL_REPOSITORIO, width="stretch")
     st.link_button("Dataset original", URL_DATASET, width="stretch")
     st.caption("Proyecto UCU · Maximiliano Friss y Arthur Martinez")
 
+condicion_explicito = (
+    True if filtro_explicito == "Todas" else datos["explicit_label"].eq(filtro_explicito)
+)
 condicion = (
     datos["popularity"].between(*rango_popularidad)
     & datos["duration_min"].between(*rango_duracion)
     & datos["energy"].between(*rango_energia)
-    & datos["explicit_label"].isin(filtro_explicito)
+    & condicion_explicito
 )
 datos_filtrados = datos.loc[condicion].copy()
 
@@ -256,8 +268,8 @@ with pestaña_relaciones:
         muestra,
         x=variable_x,
         y=variable_y,
-        opacity=0.4,
-        color_discrete_sequence=["#B3B3B3"],
+        opacity=0.8,
+        color_discrete_sequence=["#808080"],
         labels={
             variable_x: NOMBRES_VARIABLES[variable_x],
             variable_y: NOMBRES_VARIABLES[variable_y],
@@ -273,7 +285,7 @@ with pestaña_relaciones:
             y=pendiente * valores_x + ordenada,
             mode="lines",
             name="Tendencia",
-            line=dict(color="#1ED760", dash="dash"),
+            line=dict(color="#1DB954", dash="dash"),
         )
 
     st.plotly_chart(dar_estilo(dispersion, 560), width="stretch")
