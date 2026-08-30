@@ -281,6 +281,7 @@ with pestaña_relaciones:
         x=variable_x,
         y=variable_y,
         opacity=0.8,
+        range_x=rango_energia if variable_x == "energy" else None,
         color_discrete_sequence=["#808080"],
         labels={
             variable_x: NOMBRES_VARIABLES[variable_x],
