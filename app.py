@@ -146,7 +146,7 @@ pestaña_panorama, pestaña_relaciones, pestaña_datos = st.tabs(
 )
 
 with pestaña_panorama:
-    st.subheader("La muestra, de un vistazo")
+    st.subheader("Resumen general de la muestra")
     columna_histograma, columna_correlacion = st.columns([1.35, 1])
 
     with columna_histograma:
