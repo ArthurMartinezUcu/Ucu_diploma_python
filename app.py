@@ -226,7 +226,7 @@ with pestaña_panorama:
 with pestaña_relaciones:
     st.subheader("Explorador de relaciones")
 
-    selector_1, selector_2 = st.columns(2)
+    selector_1, selector_2 = st.columns([1, 2])
     selector_1.text_input(
         "Eje vertical",
         "Popularidad",
@@ -235,17 +235,19 @@ with pestaña_relaciones:
     columnas_para_comparar = [
         columna for columna in COLUMNAS_ANALISIS if columna != "popularity"
     ]
-    variable_x = selector_2.selectbox(
+    variable_x = selector_2.pills(
         "Eje horizontal",
         columnas_para_comparar,
-        index=columnas_para_comparar.index("energy"),
+        default="energy",
+        required=True,
         format_func=NOMBRES_VARIABLES.get,
+        width="stretch",
     )
     variable_y = "popularity"
 
     st.caption(
         f"Cada punto representa una canción. El eje horizontal muestra "
-        f"{DESCRIPCIONES_VARIABLES[variable_x]} y el eje vertical muestra su popularidad. "
+        f"{DESCRIPCIONES_VARIABLES[variable_x]} y el eje vertical muestra su popularidad.\n\n"
         "La línea punteada resume la tendencia lineal general."
     )
 
@@ -254,7 +256,8 @@ with pestaña_relaciones:
         muestra,
         x=variable_x,
         y=variable_y,
-        opacity=0.5,
+        opacity=0.4,
+        color_discrete_sequence=["#B3B3B3"],
         labels={
             variable_x: NOMBRES_VARIABLES[variable_x],
             variable_y: NOMBRES_VARIABLES[variable_y],
@@ -270,7 +273,7 @@ with pestaña_relaciones:
             y=pendiente * valores_x + ordenada,
             mode="lines",
             name="Tendencia",
-            line=dict(color="#FFFFFF", dash="dash"),
+            line=dict(color="#1ED760", dash="dash"),
         )
 
     st.plotly_chart(dar_estilo(dispersion, 560), width="stretch")
