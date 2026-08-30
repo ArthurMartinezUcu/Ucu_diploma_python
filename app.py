@@ -26,6 +26,19 @@ NOMBRES_VARIABLES = {
 
 COLUMNAS_ANALISIS = list(NOMBRES_VARIABLES)
 
+DESCRIPCIONES_VARIABLES = {
+    "duration_min": "la duración de cada canción en minutos",
+    "danceability": "qué tan adecuada es la canción para bailar",
+    "energy": "la intensidad y actividad percibidas en la canción",
+    "loudness": "el volumen promedio de la canción, expresado en decibeles",
+    "speechiness": "la presencia de contenido hablado",
+    "acousticness": "la probabilidad de que la canción tenga características acústicas",
+    "instrumentalness": "la probabilidad de que la canción no contenga voces",
+    "liveness": "la probabilidad de que la canción haya sido grabada en vivo",
+    "valence": "qué tan positivo o alegre es el carácter musical",
+    "tempo": "la velocidad de la canción, medida en BPM",
+}
+
 
 @st.cache_data(show_spinner=False)
 def cargar_datos(ruta):
@@ -154,7 +167,7 @@ with pestaña_panorama:
             datos_filtrados,
             x="popularity",
             nbins=30,
-            color_discrete_sequence=["#18a957"],
+            color_discrete_sequence=["#1ED760"],
             labels={"popularity": "Popularidad", "count": "Canciones"},
             title="Distribución de la popularidad",
         )
@@ -188,7 +201,7 @@ with pestaña_panorama:
                 y="variable",
                 orientation="h",
                 color="dirección",
-                color_discrete_map={"Positiva": "#18a957", "Negativa": "#f28b66"},
+                color_discrete_map={"Positiva": "#1ED760", "Negativa": "#B3B3B3"},
                 title="Correlación con popularidad",
             )
             st.plotly_chart(dar_estilo(grafico_correlaciones), width="stretch")
@@ -230,6 +243,12 @@ with pestaña_relaciones:
     )
     variable_y = "popularity"
 
+    st.caption(
+        f"Cada punto representa una canción. El eje horizontal muestra "
+        f"{DESCRIPCIONES_VARIABLES[variable_x]} y el eje vertical muestra su popularidad. "
+        "La línea punteada resume la tendencia lineal general."
+    )
+
     muestra = datos_filtrados.sample(min(len(datos_filtrados), 6_000), random_state=15)
     dispersion = px.scatter(
         muestra,
@@ -251,7 +270,7 @@ with pestaña_relaciones:
             y=pendiente * valores_x + ordenada,
             mode="lines",
             name="Tendencia",
-            line=dict(color="black", dash="dash"),
+            line=dict(color="#FFFFFF", dash="dash"),
         )
 
     st.plotly_chart(dar_estilo(dispersion, 560), width="stretch")
