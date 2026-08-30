@@ -1,103 +1,91 @@
-Integrantes Camila Maxi Arthur
+# Proyecto UCU · Grupo G
 
+Proyecto final del curso **Python para Análisis de Datos**.
 
+**Integrantes:** Camila, Maximiliano y Arthur.
 
-# Proyecto
+Se cuenta con un dataset proveniente de Kaggle que se obtuvo utilizando la API de Spotify. Se tienen 114.000 registros que corresponden a _tracks_ (pistas de audio que incluyen canciones y rutinas de Stand Up), donde para cada género (_track_genre_) posible se incluyen 1000 pistas.
 
-## Análisis Interactivo de Datos con Streamlit
+- **Repositorio:** [Ucu_diploma_python](https://github.com/ArthurMartinezUcu/Ucu_diploma_python)
+- **Aplicación Streamlit:** [ucu-grupo-g-2026.streamlit.app](https://ucu-grupo-g-2026.streamlit.app/)
+- **Dataset:** [Spotify Tracks Dataset en Kaggle](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset)
 
-**Objetivos:** 
-- Realizar el Análisis Exploratorio de Datos (EDA) de un conjunto de datos utilizando **Pandas**.
-- Desarrollar una aplicación interactiva en **Streamlit** que cargue y visualice un conjunto de datos estándar, aplicando conceptos de manipulación de datos con **Pandas** e integración de *widgets* interactivos.
+## Pregunta de análisis
 
-## Dataset
+### ¿Es posible estimar la popularidad de una canción a partir de sus atributos de audio?
 
-Utilizaremos un *dataset* con un mínimo de 60k registros y 10 variables.
+`popularity` es la variable objetivo y se expresa en una escala de 0 a 100.
+El notebook estudia su relación con duración, bailabilidad, energía, volumen, contenido hablado, acústica, instrumentalidad, probabilidad de grabación en vivo, valencia musical y tempo.
 
-Debes buscar preferentemente en sitios de 'Datos Abiertos' o en la plataformas de [Kaggle](https://www.kaggle.com/) o [Hugging Face](https://huggingface.co/). 
+## Resultado del procesamiento
 
+El dataset original contiene 114.000 filas y 89.741 identificadores de pista únicos.
+Después de la limpieza se obtiene `spotify_processed.csv`, con:
 
-## Actividades Requeridas del Proyecto
+- 88.404 pistas únicas por `track_id`
+- 15 columnas
+- ningún valor faltante
+- ningún identificador de pista duplicado
 
-El proyecto se dividirá en dos fases:
+## Principales observaciones del EDA
 
-La primera fase realizada en el archivo `notebooks/notebook.ipynb` consiste en:
-- Carga y Preparación de Datos (Pandas en Jupyter Notebook).
-- Análisis Exploratorio de Datos (Pandas en Jupyter Notebook).
-- Grabación del dataframe resultante en un archivo CSV en la carpeta `/data/processed`.
+- `energy` y `loudness` presentan una correlación positiva fuerte, cercana a `0,76`.
+- `energy` y `acousticness` presentan una correlación negativa fuerte, cercana a `-0,75`.
+- `loudness` y `acousticness` mantienen una asociación negativa aproximada de `-0,59`.
+- `danceability` y `valence` presentan una asociación positiva moderada, cercana a `0,49`.
+- Ningún atributo individual muestra una correlación lineal fuerte con `popularity`. La relación de mayor magnitud es la de `instrumentalness`, cercana a `-0,13`.
 
-La segunda fase realizada en el archivo `app.py` consiste en:
-- Carga del archivo resultante de la fase anterior en un DataFrame de Pandas.
-- Análisis Descriptivo Interactivo con Streamlit.
-- Visualización Dinámica con Streamlit.
-- Despliegue en la Nube: 'Streamlit Community Cloud'.
+Estas relaciones describen asociaciones estadísticas y no implican causalidad.
 
-### Primera Fase
+## Limpieza y preparación
 
-En el archivo `notebooks/notebook.ipynb`: 
+El flujo implementado en `notebooks/notebook.ipynb` realiza:
 
-1. **Dataset**: Graba el dataset elegido a la carpeta `data/raw`.
-2. **Carga y Estructura:** Cargar el dataset alojado en el directorio `data/raw` y convertirlo en un DataFrame de Pandas.
-2. **EDA**: Realizar un Análisis Exploratorio de Datos (EDA) del DataFrame utilizando Pandas. Límpiarlo hasta obtener un nuevo dataframe.
-3. **Grabar**: Grabar el nuevo DataFrame en un archivo CSV con un nuevo nombre descriptivo en el directorio `data/processed`.
+1. Validación de estructura, tipos, nulos y duplicados.
+2. Eliminación de filas con valores iguales a cero en `tempo`, `danceability` o `valence`.
+3. Identificación de contenido hablado del género `comedy` mediante `speechiness`.
+4. Eliminación de columnas identificadoras y descriptivas que no se utilizan en el análisis.
+5. Eliminación de registros duplicados por `track_id`.
+6. Exclusión de pistas superiores a diez minutos.
+7. Análisis univariado y multivariado.
+8. Separación de los datos en conjuntos de entrenamiento y prueba.
+9. Estandarización de variables continuas y one-hot encoding de `time_signature`.
+10. Selección de las diez características principales mediante `f_regression`.
 
-### Segunda Fase
+El ranking de características no constituye un modelo final. Para responder formalmente la pregunta predictiva todavía sería necesario comparar modelos mediante MAE, RMSE y R² con validación cruzada.
 
-En el archivo `app.py`:
+## Aplicación Streamlit
 
-#### Análisis Descriptivo Interactivo (Streamlit Widgets)
-Esta fase se centra en usar los *widgets* de Streamlit para permitir al usuario explorar los datos.
+`app.py` carga el dataset procesado y permite:
 
-1.  **Sidebar de Control (`st.sidebar`):**
-    * Implementar un `st.sidebar.markdown()` para el título y descripción de los filtros.
-2.  **Filtros (`st.slider`):**
-    * Crear un **slider** que permita al usuario seleccionar un rango de alguna columna del DataFrame.
-    * Rango: El rango del slider debe ir desde el mínimo hasta el máximo de la columna.
-    * Filtrar el DataFrame para incluir solo los registros cuyo valor se encuentre dentro del rango seleccionado por el usuario.
-3.  **Resumen Descriptivo:**
-    * Mostrar la mediana y el rango (Máximo - Mínimo), la media, desviación estándar y los quartiles de las columnas del DataFrame resultante después de aplicar todos los filtros.
+- filtrar por popularidad, duración, energía y contenido explícito;
+- consultar métricas que se recalculan después de aplicar los filtros;
+- visualizar la distribución de la popularidad;
+- comparar correlaciones lineales con popularidad;
+- comparar la popularidad con otro atributo seleccionado;
+- observar una tendencia lineal orientativa;
+- consultar media, mediana, desviación estándar, cuartiles, mínimo, máximo y rango;
+- inspeccionar los registros filtrados.
 
-#### Visualización Dinámica
+## Estructura
 
-Deberás mostrar la relación entre las variables utilizando gráficos que se actualicen automáticamente con los filtros anteriores.
-
-1.  **Gráfico de Distribución del Target (`st.pyplot` o `st.plotly_chart`):**
-    * Crear un **histograma** de la variable objetivo utilizando una librería externa (como Matplotlib o Plotly).
-    * **Requisito:** El gráfico debe reflejar la distribución de los datos **después** de aplicar los filtros del usuario.
-2.  **Gráfico de Dispersión (Regresión):**
-    * Crear un gráfico de dispersión (scatter plot) que muestre la relación entre dos columnas del DataFrame.
-    * **Requisito:** Este gráfico también debe actualizarse con los datos filtrados y ser lo suficientemente informativo (ej. incluir etiquetas y un título).
-3.  **Opcional - Mapa Geográfico** (Streamlit Nativo o Plotly):
-    * Si tu Dataset contiene valores de longitud y latitud utiliza la función nativa de Streamlit (st.map()) o un gráfico de dispersión de Plotly con st.plotly_chart() para mapear los valores de algunas columnas.
-    * Requisito: El mapa debe mostrar la distribución geográfica de los valores filtrados por el usuario.
-
-#### Despliegue en la Nube
-
-Deberás preparar tu proyecto para el despliegue.
-
-1.  **Git/GitHub:** Crear un **repositorio público** en GitHub a partir de este template.
-
-2.  **Estructura de Carpeta:**
-    * `app.py` (código de Streamlit).
-    * `notebooks/notebook.ipynb` en este archivo puedes realizar un análisis previo del dataset propuesto
-    * `requirements.txt` (listado de dependencias: `streamlit`, `pandas`, `scikit-learn`, `matplotlib` o `plotly`).
-
-3.  **Despliegue:** Desplegar la aplicación final utilizando **Streamlit Community Cloud** (share.streamlit.io).
-
-## Entrega
-
-Deberás entregar:
-- el **enlace al repositorio de GitHub**.
-- el **enlace a la aplicación desplegada**
-
-## Cómo ejecutar este proyecto en tu propio ordenador?
-1. Instala las dependencias desdde el archivo `requirements.txt`
-
-```bash
-$ pip install -r requirements.txt
+```text
+Ucu_diploma_python/
+├── app.py
+├── requirements.txt
+├── data/
+│   ├── raw/
+│   │   └── README.md
+│   └── processed/
+│       ├── README.md
+│       └── spotify_processed.csv
+├── models/
+│   ├── spotify-scaler.pkl
+│   └── spotify-time-signature-encoder.pkl
+└── notebooks/
+    ├── import_dataset.ipynb
+    └── notebook.ipynb
 ```
-2. Ejecuta el archivo `app.py`
 
-```bash
-$ streamlit run app.py
-```
+El CSV original no se adjunta por su tamaño. Se descarga en `notebooks/import_dataset.ipynb`.
+El CSV procesado sí forma parte del repositorio porque la aplicación lo necesita para iniciar.

@@ -3,13 +3,14 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 
-DATA_PATH = Path(__file__).resolve().parent / "data" / "processed" / "spotify_processed.csv"
+RUTA_DATOS = Path(__file__).parent / "data" / "processed" / "spotify_processed.csv"
+URL_REPOSITORIO = "https://github.com/ArthurMartinezUcu/Ucu_diploma_python"
+URL_DATASET = "https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset"
 
-VARIABLE_LABELS = {
+NOMBRES_VARIABLES = {
     "popularity": "Popularidad",
     "duration_min": "Duración (min)",
     "danceability": "Bailabilidad",
@@ -19,484 +20,279 @@ VARIABLE_LABELS = {
     "acousticness": "Acústica",
     "instrumentalness": "Instrumentalidad",
     "liveness": "En vivo",
-    "valence": "Valencia",
+    "valence": "Valencia musical",
     "tempo": "Tempo (BPM)",
 }
 
-ANALYSIS_COLUMNS = list(VARIABLE_LABELS)
-SUMMARY_COLUMNS = list(VARIABLE_LABELS)
+COLUMNAS_ANALISIS = list(NOMBRES_VARIABLES)
 
 
 @st.cache_data(show_spinner=False)
-def load_data(path: Path) -> pd.DataFrame:
-    data = pd.read_csv(path)
-    data["duration_min"] = data["duration_ms"] / 60_000
-    data["explicit_label"] = data["explicit"].map({0: "No explícita", 1: "Explícita"})
-    data["mode_label"] = data["mode"].map({0: "Menor", 1: "Mayor"})
-    return data
+def cargar_datos(ruta):
+    datos = pd.read_csv(ruta)
+    datos["duration_min"] = datos["duration_ms"] / 60_000
+    datos["explicit_label"] = datos["explicit"].map({0: "No explícita", 1: "Explícita"})
+    return datos
 
 
-def plot_style(fig: go.Figure, height: int = 420) -> go.Figure:
-    fig.update_layout(
-        height=height,
-        margin=dict(l=16, r=16, t=54, b=16),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#ffffff",
-        font=dict(family="Inter, ui-sans-serif, system-ui", color="#17211b"),
-        title_font=dict(size=17, color="#17211b"),
+def dar_estilo(figura, alto=420):
+    figura.update_layout(
+        height=alto,
+        margin=dict(l=20, r=20, t=55, b=20),
         legend_title_text="",
-        hoverlabel=dict(bgcolor="#17211b", font_color="#ffffff"),
     )
-    fig.update_xaxes(gridcolor="#edf1ee", zeroline=False)
-    fig.update_yaxes(gridcolor="#edf1ee", zeroline=False)
-    return fig
+    return figura
 
 
-def summary_table(data: pd.DataFrame) -> pd.DataFrame:
-    numeric = data[SUMMARY_COLUMNS]
-    summary = pd.DataFrame(
+def crear_resumen(datos):
+    numericas = datos[COLUMNAS_ANALISIS]
+    resumen = pd.DataFrame(
         {
-            "Media": numeric.mean(),
-            "Mediana": numeric.median(),
-            "Desv. estándar": numeric.std(),
-            "Q1": numeric.quantile(0.25),
-            "Q3": numeric.quantile(0.75),
-            "Mínimo": numeric.min(),
-            "Máximo": numeric.max(),
-            "Rango": numeric.max() - numeric.min(),
+            "Media": numericas.mean(),
+            "Mediana": numericas.median(),
+            "Desv. estándar": numericas.std(),
+            "Q1": numericas.quantile(0.25),
+            "Q3": numericas.quantile(0.75),
+            "Mínimo": numericas.min(),
+            "Máximo": numericas.max(),
+            "Rango": numericas.max() - numericas.min(),
         }
     )
-    summary.index = [VARIABLE_LABELS[column] for column in summary.index]
-    return summary.round(3)
+    resumen.index = [NOMBRES_VARIABLES[columna] for columna in resumen.index]
+    return resumen.round(3)
 
 
 st.set_page_config(
-    page_title="Spotify Audio Lab · UCU",
+    page_title="Proyecto UCU · Grupo G",
     page_icon="🎧",
     layout="wide",
-    initial_sidebar_state="expanded",
 )
 
-st.markdown(
-    """
-    <style>
-        :root {
-            --ink: #17211b;
-            --muted: #657269;
-            --line: #dfe7e1;
-            --surface: #ffffff;
-            --accent: #18a957;
-            --accent-soft: #dff5e8;
-        }
-        .stApp {
-            background:
-                radial-gradient(circle at 78% 2%, rgba(29, 185, 84, 0.12), transparent 25rem),
-                #f5f7f5;
-            color: var(--ink);
-        }
-        [data-testid="stHeader"] { background: transparent; }
-        [data-testid="stSidebar"] {
-            background: #111914;
-            border-right: 1px solid #2b372f;
-        }
-        [data-testid="stSidebar"] * { color: #eef6f0; }
-        [data-testid="stSidebar"] [data-baseweb="slider"] div[role="slider"] {
-            background: #1ed760;
-        }
-        .block-container {
-            max-width: 1440px;
-            padding-top: 2.1rem;
-            padding-bottom: 3rem;
-        }
-        .hero {
-            padding: 1.45rem 1.55rem 1.55rem;
-            margin-bottom: 1.15rem;
-            border: 1px solid var(--line);
-            border-radius: 22px;
-            background: rgba(255, 255, 255, 0.86);
-            box-shadow: 0 18px 55px rgba(25, 48, 34, 0.07);
-        }
-        .eyebrow {
-            color: var(--accent);
-            font-size: 0.76rem;
-            font-weight: 800;
-            letter-spacing: 0.13em;
-            text-transform: uppercase;
-            margin-bottom: 0.45rem;
-        }
-        .hero h1 {
-            color: var(--ink);
-            font-size: clamp(2rem, 4vw, 3.65rem);
-            line-height: 0.98;
-            letter-spacing: -0.055em;
-            margin: 0;
-        }
-        .hero-copy {
-            color: var(--muted);
-            max-width: 760px;
-            font-size: 1.02rem;
-            line-height: 1.55;
-            margin: 0.8rem 0 0;
-        }
-        .hero-meta {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            margin-top: 1rem;
-            padding: 0.34rem 0.62rem;
-            border-radius: 999px;
-            background: var(--accent-soft);
-            color: #087538;
-            font-size: 0.8rem;
-            font-weight: 700;
-        }
-        [data-testid="stMetric"] {
-            background: var(--surface);
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            padding: 0.95rem 1rem;
-            box-shadow: 0 8px 25px rgba(25, 48, 34, 0.045);
-        }
-        [data-testid="stMetricLabel"] { color: var(--muted); }
-        [data-testid="stMetricValue"] {
-            color: var(--ink);
-            font-weight: 750;
-            letter-spacing: -0.035em;
-        }
-        [data-testid="stPlotlyChart"], [data-testid="stDataFrame"] {
-            border: 1px solid var(--line);
-            border-radius: 17px;
-            overflow: hidden;
-            background: var(--surface);
-        }
-        .insight {
-            min-height: 116px;
-            padding: 1rem 1.05rem;
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            background: var(--surface);
-        }
-        .insight-label {
-            color: var(--muted);
-            font-size: 0.76rem;
-            font-weight: 750;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-        .insight-value {
-            color: var(--ink);
-            font-size: 1.18rem;
-            font-weight: 760;
-            line-height: 1.25;
-            margin-top: 0.42rem;
-        }
-        .insight-note {
-            color: var(--muted);
-            font-size: 0.82rem;
-            margin-top: 0.25rem;
-        }
-        .section-note { color: var(--muted); margin-top: -0.45rem; }
-        .stTabs [data-baseweb="tab-list"] { gap: 0.35rem; }
-        .stTabs [data-baseweb="tab"] {
-            border-radius: 999px;
-            padding: 0.35rem 0.85rem;
-        }
-        .stTabs [aria-selected="true"] { background: var(--accent-soft); }
-        @media (max-width: 720px) {
-            .block-container { padding-top: 1rem; }
-            .hero { padding: 1.1rem; border-radius: 18px; }
-        }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-if not DATA_PATH.exists():
-    st.error("No se encontró el dataset procesado. Ejecutá primero el notebook de preparación.")
+if not RUTA_DATOS.exists():
+    st.error("No se encontró el dataset procesado.")
     st.stop()
 
-df = load_data(DATA_PATH)
+datos = cargar_datos(RUTA_DATOS)
 
 with st.sidebar:
-    st.markdown("## Sala de control")
-    st.caption("Ajustá los filtros y todo el análisis se actualizará al instante.")
+    st.header("Filtros")
 
-    popularity_range = st.slider(
+    rango_popularidad = st.slider(
         "Popularidad",
-        min_value=int(df["popularity"].min()),
-        max_value=int(df["popularity"].max()),
-        value=(int(df["popularity"].min()), int(df["popularity"].max())),
-        help="Índice de Spotify entre 0 y 100.",
+        int(datos["popularity"].min()),
+        int(datos["popularity"].max()),
+        (int(datos["popularity"].min()), int(datos["popularity"].max())),
     )
-    duration_bounds = (
-        float(np.floor(df["duration_min"].min() * 10) / 10),
-        float(np.ceil(df["duration_min"].max() * 10) / 10),
+    duracion_minutos = (
+        float(np.floor(datos["duration_min"].min() * 10) / 10),
+        float(np.ceil(datos["duration_min"].max() * 10) / 10),
     )
-    duration_range = st.slider(
+    rango_duracion = st.slider(
         "Duración (minutos)",
-        min_value=duration_bounds[0],
-        max_value=duration_bounds[1],
-        value=duration_bounds,
+        duracion_minutos[0],
+        duracion_minutos[1],
+        duracion_minutos,
         step=0.1,
     )
-    energy_range = st.slider(
+    rango_energia = st.slider(
         "Energía",
-        min_value=float(df["energy"].min()),
-        max_value=float(df["energy"].max()),
-        value=(float(df["energy"].min()), float(df["energy"].max())),
+        float(datos["energy"].min()),
+        float(datos["energy"].max()),
+        (float(datos["energy"].min()), float(datos["energy"].max())),
         step=0.01,
     )
-    explicit_filter = st.multiselect(
+    filtro_explicito = st.multiselect(
         "Contenido explícito",
-        options=["No explícita", "Explícita"],
+        ["No explícita", "Explícita"],
         default=["No explícita", "Explícita"],
     )
-    mode_filter = st.multiselect(
-        "Modo tonal",
-        options=["Mayor", "Menor"],
-        default=["Mayor", "Menor"],
-    )
-    signature_filter = st.multiselect(
-        "Compás detectado",
-        options=sorted(df["time_signature"].unique().tolist()),
-        default=sorted(df["time_signature"].unique().tolist()),
-        format_func=lambda value: f"{int(value)}/4" if value in {3, 4, 5} else f"Código {int(value)}",
-    )
+
     st.divider()
-    st.caption("Proyecto UCU · Camila, Maxi y Arthur")
+    st.link_button("Repositorio en GitHub", URL_REPOSITORIO, width="stretch")
+    st.link_button("Dataset original", URL_DATASET, width="stretch")
+    st.caption("Proyecto UCU · Camila, Maximiliano y Arthur")
 
-mask = (
-    df["popularity"].between(*popularity_range)
-    & df["duration_min"].between(*duration_range)
-    & df["energy"].between(*energy_range)
-    & df["explicit_label"].isin(explicit_filter)
-    & df["mode_label"].isin(mode_filter)
-    & df["time_signature"].isin(signature_filter)
+condicion = (
+    datos["popularity"].between(*rango_popularidad)
+    & datos["duration_min"].between(*rango_duracion)
+    & datos["energy"].between(*rango_energia)
+    & datos["explicit_label"].isin(filtro_explicito)
 )
-filtered = df.loc[mask].copy()
+datos_filtrados = datos.loc[condicion].copy()
 
-st.markdown(
-    f"""
-    <section class="hero">
-        <div class="eyebrow">Spotify Audio Lab · UCU</div>
-        <h1>¿Qué hace popular<br>una canción?</h1>
-        <p class="hero-copy">
-            Una lectura interactiva de los atributos sonoros de Spotify. Explorá cómo cambian
-            la popularidad, la energía y el carácter musical en <strong>{len(filtered):,}</strong> pistas filtradas.
-        </p>
-        <div class="hero-meta">● Datos listos · {len(df):,} pistas analizadas</div>
-    </section>
-    """.replace(",", "."),
-    unsafe_allow_html=True,
+st.title("🎧 ¿Es posible predecir la popularidad de una canción a partir de sus atributos?")
+st.write(
+    "Análisis exploratorio para observar qué atributos se relacionan con la popularidad. "
+    "La aplicación no realiza una predicción, sino que muestra asociaciones y tendencias presentes en el dataset."
 )
+st.caption(f"Dataset completo: {len(datos):,} canciones".replace(",", "."))
 
-if filtered.empty:
-    st.warning("No hay canciones para esta combinación de filtros. Ampliá alguno de los rangos.")
+if datos_filtrados.empty:
+    st.warning("El filtro utilizado no trajo datos.")
     st.stop()
 
-metric_1, metric_2, metric_3, metric_4 = st.columns(4)
-metric_1.metric("Pistas visibles", f"{len(filtered):,}".replace(",", "."), f"{len(filtered) / len(df):.1%} del total")
-metric_2.metric("Popularidad media", f"{filtered['popularity'].mean():.1f} / 100")
-metric_3.metric("Duración mediana", f"{filtered['duration_min'].median():.1f} min")
-metric_4.metric("Bailabilidad media", f"{filtered['danceability'].mean():.2f}")
+columna_1, columna_2, columna_3, columna_4 = st.columns(4)
+columna_1.metric(
+    "Canciones visibles",
+    f"{len(datos_filtrados):,}".replace(",", "."),
+    f"{len(datos_filtrados) / len(datos):.1%} del total",
+)
+columna_2.metric("Popularidad media", f"{datos_filtrados['popularity'].mean():.1f} / 100")
+columna_3.metric("Duración mediana", f"{datos_filtrados['duration_min'].median():.1f} min")
+columna_4.metric("Bailabilidad media", f"{datos_filtrados['danceability'].mean():.2f}")
 
-tab_overview, tab_relationships, tab_data = st.tabs(
+pestaña_panorama, pestaña_relaciones, pestaña_datos = st.tabs(
     ["Panorama", "Relaciones", "Datos y resumen"]
 )
 
-with tab_overview:
+with pestaña_panorama:
     st.subheader("La muestra, de un vistazo")
-    st.markdown(
-        '<p class="section-note">Distribución del objetivo y variables con mayor asociación lineal.</p>',
-        unsafe_allow_html=True,
-    )
+    columna_histograma, columna_correlacion = st.columns([1.35, 1])
 
-    chart_col, corr_col = st.columns([1.35, 1])
-    with chart_col:
-        bins = st.slider("Detalle del histograma", 10, 60, 28, 2)
-        histogram = px.histogram(
-            filtered,
+    with columna_histograma:
+        histograma = px.histogram(
+            datos_filtrados,
             x="popularity",
-            nbins=bins,
+            nbins=30,
             color_discrete_sequence=["#18a957"],
-            labels={"popularity": "Popularidad", "count": "Pistas"},
-            title="Distribución de popularidad",
+            labels={"popularity": "Popularidad", "count": "Canciones"},
+            title="Distribución de la popularidad",
         )
-        histogram.update_traces(
-            marker_line_color="#ffffff",
-            marker_line_width=0.7,
-            hovertemplate="Popularidad: %{x}<br>Pistas: %{y}<extra></extra>",
-        )
-        histogram.add_vline(
-            x=filtered["popularity"].median(),
+        histograma.add_vline(
+            x=datos_filtrados["popularity"].median(),
             line_dash="dash",
-            line_color="#17211b",
             annotation_text="Mediana",
-            annotation_position="top right",
         )
-        st.plotly_chart(plot_style(histogram), width="stretch")
+        st.plotly_chart(dar_estilo(histograma), width="stretch")
 
-    with corr_col:
-        correlations = (
-            filtered[ANALYSIS_COLUMNS]
-            .corr(numeric_only=True)["popularity"]
+    with columna_correlacion:
+        correlaciones = (
+            datos_filtrados[COLUMNAS_ANALISIS]
+            .corr()["popularity"]
             .drop("popularity")
             .dropna()
             .sort_values()
         )
-        if correlations.empty:
+
+        if correlaciones.empty:
             st.info("Se necesita variación en popularidad para calcular correlaciones.")
         else:
-            corr_frame = correlations.rename_axis("variable").reset_index(name="correlación")
-            corr_frame["variable"] = corr_frame["variable"].map(VARIABLE_LABELS)
-            corr_frame["dirección"] = np.where(corr_frame["correlación"] >= 0, "Positiva", "Negativa")
-            corr_chart = px.bar(
-                corr_frame,
+            tabla_correlaciones = correlaciones.rename_axis("variable").reset_index(name="correlación")
+            tabla_correlaciones["variable"] = tabla_correlaciones["variable"].map(NOMBRES_VARIABLES)
+            tabla_correlaciones["dirección"] = np.where(
+                tabla_correlaciones["correlación"] >= 0, "Positiva", "Negativa"
+            )
+            grafico_correlaciones = px.bar(
+                tabla_correlaciones,
                 x="correlación",
                 y="variable",
                 orientation="h",
                 color="dirección",
                 color_discrete_map={"Positiva": "#18a957", "Negativa": "#f28b66"},
                 title="Correlación con popularidad",
-                labels={"correlación": "Correlación", "variable": ""},
             )
-            corr_chart.update_traces(hovertemplate="%{y}: %{x:.3f}<extra></extra>")
-            st.plotly_chart(plot_style(corr_chart), width="stretch")
+            st.plotly_chart(dar_estilo(grafico_correlaciones), width="stretch")
 
-    if correlations.empty:
-        strongest_name = "No disponible"
-        strongest_note = "Ampliá el rango de popularidad para comparar."
+    if correlaciones.empty:
+        variable_destacada = "No disponible"
+        valor_correlacion = "Ampliá el rango de popularidad para comparar."
     else:
-        strongest = correlations.abs().idxmax()
-        strongest_name = VARIABLE_LABELS[strongest]
-        strongest_note = f"Correlación {correlations[strongest]:+.3f}; asociación, no causalidad."
-    explicit_share = filtered["explicit"].mean()
-    high_popularity_share = (filtered["popularity"] >= 70).mean()
-    insight_1, insight_2, insight_3 = st.columns(3)
-    insight_1.markdown(
-        f'<div class="insight"><div class="insight-label">Señal más fuerte</div><div class="insight-value">{strongest_name}</div><div class="insight-note">{strongest_note}</div></div>',
-        unsafe_allow_html=True,
-    )
-    insight_2.markdown(
-        f'<div class="insight"><div class="insight-label">Alta popularidad</div><div class="insight-value">{high_popularity_share:.1%} de la muestra</div><div class="insight-note">Pistas con popularidad igual o superior a 70.</div></div>',
-        unsafe_allow_html=True,
-    )
-    insight_3.markdown(
-        f'<div class="insight"><div class="insight-label">Contenido explícito</div><div class="insight-value">{explicit_share:.1%} de la muestra</div><div class="insight-note">Proporción dentro de los filtros actuales.</div></div>',
-        unsafe_allow_html=True,
-    )
+        variable_mayor_correlacion = correlaciones.abs().idxmax()
+        variable_destacada = NOMBRES_VARIABLES[variable_mayor_correlacion]
+        valor_correlacion = f"{correlaciones[variable_mayor_correlacion]:+.3f}"
 
-with tab_relationships:
+    resultado_1, resultado_2, resultado_3 = st.columns(3)
+    resultado_1.metric("Mayor asociación", variable_destacada, valor_correlacion)
+    resultado_2.metric(
+        "Popularidad igual o mayor a 70",
+        f"{(datos_filtrados['popularity'] >= 70).mean():.1%}",
+    )
+    resultado_3.metric("Contenido explícito", f"{datos_filtrados['explicit'].mean():.1%}")
+    st.caption("Las correlaciones muestran asociación, no causalidad.")
+
+with pestaña_relaciones:
     st.subheader("Explorador de relaciones")
-    st.markdown(
-        '<p class="section-note">Elegí dos atributos y compará hasta 6.000 pistas, con una tendencia lineal orientativa.</p>',
-        unsafe_allow_html=True,
-    )
-    selector_1, selector_2, selector_3 = st.columns([1, 1, 1])
-    x_variable = selector_1.selectbox(
-        "Eje horizontal",
-        ANALYSIS_COLUMNS,
-        index=ANALYSIS_COLUMNS.index("energy"),
-        format_func=VARIABLE_LABELS.get,
-    )
-    y_variable = selector_2.selectbox(
+
+    selector_1, selector_2 = st.columns(2)
+    selector_1.text_input(
         "Eje vertical",
-        ANALYSIS_COLUMNS,
-        index=ANALYSIS_COLUMNS.index("popularity"),
-        format_func=VARIABLE_LABELS.get,
+        "Popularidad",
+        disabled=True,
     )
-    color_variable = selector_3.selectbox(
-        "Agrupar por",
-        ["explicit_label", "mode_label"],
-        format_func=lambda value: "Contenido explícito" if value == "explicit_label" else "Modo tonal",
+    columnas_para_comparar = [
+        columna for columna in COLUMNAS_ANALISIS if columna != "popularity"
+    ]
+    variable_x = selector_2.selectbox(
+        "Eje horizontal",
+        columnas_para_comparar,
+        index=columnas_para_comparar.index("energy"),
+        format_func=NOMBRES_VARIABLES.get,
     )
+    variable_y = "popularity"
 
-    plot_data = filtered.sample(min(len(filtered), 6_000), random_state=15)
-    scatter = px.scatter(
-        plot_data,
-        x=x_variable,
-        y=y_variable,
-        color=color_variable,
-        color_discrete_sequence=["#18a957", "#7467f0"],
-        opacity=0.48,
+    muestra = datos_filtrados.sample(min(len(datos_filtrados), 6_000), random_state=15)
+    dispersion = px.scatter(
+        muestra,
+        x=variable_x,
+        y=variable_y,
+        opacity=0.5,
         labels={
-            x_variable: VARIABLE_LABELS[x_variable],
-            y_variable: VARIABLE_LABELS[y_variable],
-            "explicit_label": "Contenido",
-            "mode_label": "Modo",
+            variable_x: NOMBRES_VARIABLES[variable_x],
+            variable_y: NOMBRES_VARIABLES[variable_y],
         },
-        title=f"{VARIABLE_LABELS[y_variable]} vs. {VARIABLE_LABELS[x_variable]}",
-        hover_data={"track_id": True, "duration_min": ":.2f", "popularity": True},
+        title=f"{NOMBRES_VARIABLES[variable_y]} vs. {NOMBRES_VARIABLES[variable_x]}",
     )
-    if x_variable != y_variable and plot_data[x_variable].nunique() > 1:
-        slope, intercept = np.polyfit(plot_data[x_variable], plot_data[y_variable], 1)
-        trend_x = np.linspace(plot_data[x_variable].min(), plot_data[x_variable].max(), 100)
-        scatter.add_trace(
-            go.Scatter(
-                x=trend_x,
-                y=slope * trend_x + intercept,
-                mode="lines",
-                name="Tendencia",
-                line=dict(color="#17211b", width=2, dash="dash"),
-                hoverinfo="skip",
-            )
-        )
-    scatter.update_traces(marker=dict(size=7), selector=dict(mode="markers"))
-    st.plotly_chart(plot_style(scatter, height=560), width="stretch")
 
-with tab_data:
+    if muestra[variable_x].nunique() > 1:
+        pendiente, ordenada = np.polyfit(muestra[variable_x], muestra[variable_y], 1)
+        valores_x = np.linspace(muestra[variable_x].min(), muestra[variable_x].max(), 100)
+        dispersion.add_scatter(
+            x=valores_x,
+            y=pendiente * valores_x + ordenada,
+            mode="lines",
+            name="Tendencia",
+            line=dict(color="black", dash="dash"),
+        )
+
+    st.plotly_chart(dar_estilo(dispersion, 560), width="stretch")
+
+with pestaña_datos:
     st.subheader("Resumen descriptivo")
-    st.markdown(
-        '<p class="section-note">Todas las métricas corresponden únicamente a la selección visible.</p>',
-        unsafe_allow_html=True,
+    st.info(
+        "La popularidad cambia con el tiempo y también depende de información que no tenemos, "
+        "como promoción, playlists o seguidores del artista."
     )
-    st.dataframe(
-        summary_table(filtered),
-        width="stretch",
-        column_config={
-            column: st.column_config.NumberColumn(column, format="%.3f")
-            for column in ["Media", "Mediana", "Desv. estándar", "Q1", "Q3", "Mínimo", "Máximo", "Rango"]
-        },
-    )
+    st.dataframe(crear_resumen(datos_filtrados), width="stretch")
 
     st.subheader("Explorar registros")
-    default_columns = [
-        "track_id",
-        "popularity",
-        "duration_min",
-        "danceability",
-        "energy",
-        "valence",
-        "tempo",
-    ]
-    visible_columns = st.multiselect(
+    nombres_columnas = {
+        "track_id": "ID de canción",
+        "explicit_label": "Contenido",
+        "time_signature": "Compás",
+    }
+    columnas_visibles = st.multiselect(
         "Columnas visibles",
-        options=["track_id", *ANALYSIS_COLUMNS, "explicit_label", "mode_label", "time_signature"],
-        default=default_columns,
-        format_func=lambda value: VARIABLE_LABELS.get(
-            value,
-            {
-                "track_id": "ID de pista",
-                "explicit_label": "Contenido",
-                "mode_label": "Modo",
-                "time_signature": "Compás",
-            }.get(value, value),
-        ),
+        [
+            "track_id",
+            *COLUMNAS_ANALISIS,
+            "explicit_label",
+            "time_signature",
+        ],
+        default=[
+            "track_id",
+            "popularity",
+            "duration_min",
+            "danceability",
+            "energy",
+            "valence",
+            "tempo",
+        ],
+        format_func=lambda valor: NOMBRES_VARIABLES.get(valor, nombres_columnas.get(valor, valor)),
     )
-    if visible_columns:
-        st.dataframe(filtered[visible_columns].head(500), width="stretch", hide_index=True)
+
+    if columnas_visibles:
+        st.dataframe(datos_filtrados[columnas_visibles].head(500), width="stretch", hide_index=True)
     else:
         st.info("Seleccioná al menos una columna para ver la tabla.")
 
-    export_data = filtered.drop(columns=["explicit_label", "mode_label"]).to_csv(index=False).encode("utf-8")
-    st.download_button(
-        "Descargar selección en CSV",
-        data=export_data,
-        file_name="spotify_seleccion.csv",
-        mime="text/csv",
-        width="stretch",
-    )
-
-st.caption(
-    "Fuente: Spotify Tracks Dataset · La correlación describe asociación estadística y no implica causalidad."
-)
+st.caption(f"[Dataset original]({URL_DATASET}) · [Código fuente]({URL_REPOSITORIO}) · Proyecto UCU")
