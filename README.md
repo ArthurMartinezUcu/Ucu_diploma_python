@@ -86,3 +86,15 @@ Ucu_diploma_python/
 
 El CSV original no se adjunta por su tamaño. Se descarga en `notebooks/import_dataset.ipynb`.
 El CSV procesado sí forma parte del repositorio porque la aplicación lo necesita para iniciar.
+
+## Instrucciones para cargar el proyecto y la aplicación de Streamlit
+1. Instalar las dependencias desde el archivo `requirements.txt`
+
+```bash
+$ pip install -r requirements.txt
+```
+2. Ejecutar el archivo `app.py` (o acceder mediante el link previamente indicado en este README.)
+
+```bash
+$ streamlit run app.py
+```
